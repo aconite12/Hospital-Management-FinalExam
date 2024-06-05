@@ -9,7 +9,8 @@ class PatientController extends Controller
 {
     public function index()
     {
-        return Patient::all();
+        $patients = Patient::all();
+        return response()->json($patients);
     }
 
     public function store(Request $request)
@@ -44,28 +45,41 @@ class PatientController extends Controller
 
     public function show($id)
     {
-        return Patient::findOrFail($id);
+        $patient = Patient::findOrFail($id);
+        return response()->json($patient);
     }
 
     public function update(Request $request, $id)
     {
         $patient = Patient::findOrFail($id);
 
-        $request->validate([
-            'first_name' => 'string|max:255',
-            'last_name' => 'string|max:255',
-            'date_of_birth' => 'date',
-            'gender' => 'string|max:255',
-            'address' => 'string|max:255',
-            'phone' => 'string|max:255',
-            'email' => 'string|email|max:255|unique:patients,email,' . $patient->id,
-            'emergency_contact' => 'string|max:255',
-            'medical_history' => 'nullable|string',
+        $data = $request->only([
+            'first_name',
+            'last_name',
+            'date_of_birth',
+            'gender',
+            'address',
+            'phone',
+            'email',
+            'emergency_contact',
+            'medical_history'
         ]);
 
-        $patient->update($request->all());
+        $request->validate([
+            'first_name' => 'sometimes|required|string|max:255',
+            'last_name' => 'sometimes|required|string|max:255',
+            'date_of_birth' => 'sometimes|required|date',
+            'gender' => 'sometimes|required|string|max:255',
+            'address' => 'sometimes|required|string|max:255',
+            'phone' => 'sometimes|required|string|max:255',
+            'email' => 'sometimes|required|string|email|max:255|unique:patients,email,' . $patient->id,
+            'emergency_contact' => 'sometimes|required|string|max:255',
+            'medical_history' => 'sometimes|nullable|string',
+        ]);
 
-        return $patient;
+        $patient->update($data);
+
+        return response()->json($patient);
     }
 
     public function destroy($id)
@@ -73,6 +87,6 @@ class PatientController extends Controller
         $patient = Patient::findOrFail($id);
         $patient->delete();
 
-        return response()->noContent();
+        return response()->json(null, 204);
     }
 }
